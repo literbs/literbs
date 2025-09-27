@@ -1,0 +1,83 @@
+eightNodeOptionAlgorithms: &eightNodeOptionAlgorithms
+  - a2
+  - da2
+  - lee
+  - jps
+  - spfa
+  - literbs-8
+  - literbs-8-pruned
+  - literbs-8-pythag
+  - literbs-8-pythag-pruned
+
+# all tests, which have skip set to false will be ran
+tests:
+
+  # run all algorithms for optimality
+  # start at seed 0, then get to seed 10, 20, 30, 40 ....
+  # a known seed and a known gridSize can be used to reproduce the grid, and therefore reproduce the behaviour of the 
+  # path finding algorithm
+  - name: optimalityTestConsistentTests
+    type: optimality
+    initialSeed: 0
+    seedIncriment: 10
+    numberOfIterations: 1000
+    gridSize: 100
+    multiple-algorithms: '*' # this will run all the algorithms
+    skip: true
+
+  # should get 3000 total results, split across 30 files ( numberOfIterations / densityIncrimentAfter = 30)
+  # density starts at 1 and will increase all the way up to 30 since we have 30 iterations
+  # since the initialSeed and seedIncriment are defined, test will iterate from seed 1 to seed 3000 every single time the test is run
+  - name: robustnessTestConsistent
+    type: robustness
+    initialSeed: 0
+    seedIncriment: 1
+    densityStart: 1 # start with density 1
+    densityIncriment: 1 # value to add at each incriment
+    densityIncrimentAfter: 100 # after 10 iterations, increse the density by 1
+    numberOfIterations: 3000
+    gridSize: 100
+    multiple-algorithms: '*'
+    skip: true
+
+  # random efficiency test, since no intiial seed is defined
+  # also, only going to run a2, da2 and literbs-8 algorithms
+  - name: efficiencyTestLimited
+    type: efficiency
+    numberOfIterations: 100
+    gridSize: 10
+    multiple-algorithms: # this will run a subset of the algorithms
+      - a2
+      - da2
+      - literbs-8
+    skip: true
+
+  # following tests used to analyse efficiency
+  - name: efficiencyTest
+    type: efficiency
+    numberOfIterations: 10000
+    gridSize: 100
+    multiple-algorithms: *eightNodeOptionAlgorithms
+    skip: false
+
+  # following tests used to analyse optimality
+  - name: optimalityTest
+    type: optimality
+    numberOfIterations: 10000
+    gridSize: 100
+    multiple-algorithms: *eightNodeOptionAlgorithms
+    skip: false
+
+  # following tests used to analyse robustness
+  # 30 tests, density 1-30, random tests
+  - name: robustnessTest
+    type: robustness
+    # initialSeed: 0
+    # seedIncriment: 25
+    densityStart: 1 # start with density 1
+    densityIncriment: 1 # value to add at each incriment
+    densityIncrimentAfter: 1000 # after 1000 iterations, increse the density by 1 and also make a new file
+    numberOfIterations: 30000
+    gridSize: 100
+    multiple-algorithms: *eightNodeOptionAlgorithms
+    skip: false

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Document</title>
+    <script>
+        const socket = io('http://localhost:5005');
+
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+        });
+
+        const populateWithContent = (id, min=1, max=100, defaultValue=undefined) => {
+            let selectContainer = document.querySelector(id)
+            for (let k = min; k <= max; k++) {
+                let opt = document.createElement('option')
+                opt.innerText = k
+                opt.value = k
+                opt.id = `${id}-${k}`
+                if (defaultValue==k){
+                    opt.selected = true
+                }
+                selectContainer.appendChild(opt)
+            }
+        }
+
+    </script>
+
+    <style>
+        *{
+            margin:0;
+            font-family: 'Roboto', sans-serif;
+        }
+        body {
+            display: flex;
+            height: calc(100vh);
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1em;
+            /* padding: 10px; */
+            flex-wrap: wrap;
+        }
+
+        #control-hub {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: row;
+            gap:5em;
+            padding: 1em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <form id="control-hub">
+        <div>
+        <label>Algorithms:</label>
+        <select id="algorithm-selector">
+            <option value="none">Choose an option</option>
+
+            <option value="Single Instance Lee algorithm">Single Instance Lee algorithm</option>
+            <option value="Single Instance Lee algorithm (Pruned)">Single Instance Lee algorithm Pruned</option>
+            <option value="literbs">LiteRBS 4 Options</option>
+            <option value="literbs-pruned">LiteRBS 4 Options Pruned</option>
+            <option value="literbs-8">LiteRBS 8 Options</option>
+            <option value="literbs-8-pruned">LiteRBS 8 Options Pruned</option>
+            <option value="literbs-8-pythag">LiteRBS 8 Pythag</option>
+            <option value="literbs-8-pythag-pruned">LiteRBS 8 Pythag Pruned (default)</option>
+            <option value="Lee algorithm">Lee algorithm</option>
+            <option value="A* algorithm">A* algorithm</option>
+            <option value="Dual A* algorithm">Dual A* algorithm</option>
+
+            <option value="RRT">RRT</option>
+
+            <option value="JPS">JPS</option>
+
+            <option value="SPFA">SPFA</option>
+            <script>
+                let selector = document.querySelector('#algorithm-selector')
+                selector.addEventListener('change', (event)=> {
+                    let value = event.target.value
+                    if (value === 'none') {
+                        return
+                    }
+                    let chosenArea = document.querySelector('#chosen-algorithms-container')
+                    let children = chosenArea.children
+                    for (let k = 0; k < children.length; k++) {
+                        let child = children[k]
+                        if (child.innerText===value) {
+                            return;
+                        }
+                    }
+                    let p = document.createElement('p')
+                    p.innerText = value
+                    p.addEventListener('click', (event)=> { chosenArea.removeChild(event.target) })
+                    chosenArea.appendChild(p)
+                })
+            </script>
+        </select>
+        </div>
+        <div id="chosen-algorithms-container">
+        </div>
+
+
+        <div>
+        <label>Test type:</label>
+        <select id="test-type">
+            <option>Robustness</option>
+            <option>Efficiency</option>
+            <option>Optimality</option>
+        </select>
+        </div>
+        <div>
+        <select id="robustness-levels">
+            <script>
+                populateWithContent('#robustness-levels', 1, 30)
+            </script>
+        </select>
+        </div>
+        <div>
+        <label>Grid size:</label>
+        <select id="grid-size">
+            <script>
+                populateWithContent('#grid-size', 5, 100)
+            </script>
+        </select>
+        </div>
+
+        <div>
+            <label>Seed:</label>
+            <select id="seed-value">
+                <option value="random">Random</option>
+                <option value="random-2">Random Web version</option>
+                <script>
+                    populateWithContent('#seed-value', 1, 1000)
+                </script>
+            </select>
+        </div>
+
+        <div>
+            <label>delay (ms-1):</label>
+            <select id="delay-value">
+                <script>
+                    populateWithContent('#delay-value', 0, 1000, 10)
+                </script>
+            </select>
+        </div>
+
+        <button id="run-button" type="button" style="height:fit-content">Play</button>
+        <script>
+
+            function getRandomInteger(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            document.querySelector('#run-button').addEventListener('click', (event)=>{
+
+                let algorithms = []
+
+                let chosenArea = document.querySelector('#chosen-algorithms-container')
+                let children = chosenArea.children
+                for (let k = 0; k < children.length; k++) {
+                    let child = children[k]
+                    let name = child.innerText
+
+                    if (name==='Single Instance Lee algorithm') algorithms.push('sh')
+                    if (name==='Single Instance Lee algorithm (Pruned)') algorithms.push('shp')
+                    if (name==='literbs') algorithms.push('literbs')
+                    if (name==='literbs-pruned') algorithms.push('literbs-pruned')
+                    if (name==='literbs-8') algorithms.push('literbs-8')
+                    if (name==='literbs-8-pruned') algorithms.push('literbs-8-pruned')
+                    if (name==='literbs-8-pythag') algorithms.push('literbs-8-pythag')
+                    if (name==='literbs-8-pythag-pruned') algorithms.push('literbs-8-pythag-pruned')
+                    if (name==='Lee algorithm') algorithms.push('lee')
+                    if (name==='A* algorithm') algorithms.push('a2')
+                    if (name==='Dual A* algorithm') algorithms.push('da2')
+                    if (name==='RRT') algorithms.push('rrt')
+                    if (name==='JPS') algorithms.push('jps')
+                    if (name==='SPFA') algorithms.push('spfa')
+
+                }
+
+                if (algorithms.length==0){
+                    alert('No algorithms selected...')
+                    return;
+                }
+
+                let testTypeContainer = document.querySelector('#test-type')
+                let testType = testTypeContainer.value.toLowerCase()
+
+                let rosbustnessLevelContainer = document.querySelector('#robustness-levels')
+                let rosbustnessLevel = parseInt(rosbustnessLevelContainer.value)
+
+                let gridSizeContainer = document.querySelector('#grid-size')
+                let gridSize = parseInt(gridSizeContainer.value)
+
+                let seedValueContainer = document.querySelector('#seed-value')
+                let seedValue = seedValueContainer.value
+                if (seedValue == 'random')
+                    seedValue = undefined
+                else if (seedValue == 'random-2'){
+                    value = getRandomInteger(0, 1000)
+                    seedValue = value
+                    seedValueContainer.children[2+value].selected = true
+                }
+                else
+                    seedValue = parseInt(seedValue)
+
+                let delayContainer = document.querySelector('#delay-value')
+                let delayValue = parseInt(delayContainer.value)
+
+
+                let obj = { testType, rosbustnessLevel, gridSize, algorithms , nonprocessing:true, seedValue, delay:delayValue }
+
+                socket.emit('message', obj)
+
+            })
+        </script>
+        <p id="currentcord">current cord: </p>
+    </form>
+
+    <script>
+
+
+        const colours = {
+                blockers:{background:'black', text:'white'},
+                path:{background:'#2FB52C', text:'black'},
+                visits:{background:'#CEAA29', text:'black'},
+                robot:{background:'#2C63B5', text:'white'},
+            }
+
+        const onInput = (e, ctx, blockSize) => {
+            let x = e.clientX
+            let y = e.clientY
+            var rect = e.target.getBoundingClientRect();
+            let j = Math.floor((x-rect.left)/blockSize)
+            let i = Math.floor((y-rect.top)/blockSize)
+            // console.log(x, y)
+            // ctx.clearRect(0, 0, 0, 40)
+            // ctx.fillText(i+","+j, 30, 30);
+            // return i+":"+j
+            //
+            document.querySelector('#currentcord').innerText = `Cords: ${i}, ${j}`
+        }
+
+    const mapInformation = ({canvas, ctx, barriers, path, visited, gridSize}) => {
+        const blockSize = canvas.height / gridSize
+
+        ctx.fillStyle = '#fff'
+        ctx.fillRect( 0, 0, canvas.width, canvas.height )
+        canvas.onmousemove = function(e) {
+            onInput(e, ctx, blockSize)
+        }
+
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                let id = i+":"+j
+                let bcolor;
+                let tcolor;
+
+                if (barriers.hasOwnProperty(id)) {
+                    bcolor = colours.blockers.background;
+                    tcolor = colours.blockers.text;
+                }
+                else if (path.hasOwnProperty(id)) {
+                    bcolor = colours.path.background;
+                    tcolor = colours.path.text;
+                }
+                else if (visited.hasOwnProperty(id)) {
+                    bcolor = colours.visits.background;
+                    tcolor = colours.visits.text;
+                }
+                else {
+                    bcolor = '#fff'
+                    tcolor = 'black'
+                }
+                ctx.strokeWidth = 0.5;
+                ctx.strokeRect( (j*blockSize), (i*blockSize), blockSize, blockSize )
+                ctx.fillStyle = bcolor;
+                // const blockD2 = blockSize*0.7
+                // const blockPadding = blockSize*0.3/4 +
+                ctx.fillRect( j*blockSize, i*blockSize, blockSize, blockSize )
+            }
+        }
+
+    }
+
+
+
+    const data = {
+        // 0: {
+        //     id:0, blockers:{}, path:{}, visits:{}, gridSize:50, meta:{name:'A* algorithm', runtime:'something...'}
+        // },
+    }
+
+    const codeMap = {
+        'da2': 'Dual a star algorithm',
+        'a2': 'A star algorithm',
+        'lee': 'The Lee algorithm',
+        'literbs': 'LiteRBS',
+        'literbs-pythag': 'LiteRBS Pythag',
+        'literbs-pruned': 'LiteRBS Pruned',
+        'literbs-pruned-spacing': 'LiteRBS Pruned Spacing',
+        'literbs-8': 'LiteRBS 8 options',
+        'literbs-8-pruned': 'LiteRBS 8 Pruned',
+        'literbs-8-pruned-spacing': 'LiteRBS 8 Pruned Spacing',
+        'literbs-8-pythag': 'LiteRBS 8 Pythag',
+        'literbs-8-pythag-pruned': 'LiteRBS 8 Pythag Pruned (default)',
+        'rrt': 'Rapidly exploring Random Tree',
+        'jps': 'Jump point search algorithm',
+        'bf': 'Bellman ford algorithm (optimised for grid)',
+        'spfa': 'Shortest Path Faster Algorithm',
+        'sh': 'LITRBS (1 instance)',
+        'shp': 'LITRBS (1 instance) Pruned'
+    }
+
+    const determineFullNameOfAlgorithm = (key) => {
+        if (codeMap.hasOwnProperty(key)) {
+            return codeMap[key]
+        }
+        
+        return key
+    }
+
+    const produceSingleContentFromScratch = content => {
+        const key = content.id
+        let parent = document.createElement('div')
+        parent.id = "parent"+key
+        parent.className = 'removable'
+        let informationDiv = document.createElement('div')
+        informationDiv.id = "inner"+key
+        let meta = content.meta
+        for (let field in meta) {
+            let fieldP = document.createElement('p')
+            value = meta[field]
+            if (field=="algorithm") {
+                value = determineFullNameOfAlgorithm(value)
+            }
+            fieldP.innerHTML = `<span>${field}</span>: ${value}`
+            informationDiv.appendChild(fieldP)
+        }
+        let canvas = document.createElement('canvas')
+        canvas.id = "canvas"+key
+        canvas.height = defaultHeight
+        canvas.width = defaultWidth
+        content.canvas = canvas
+        content.ctx = canvas.getContext('2d')
+        parent.appendChild(canvas)
+        parent.appendChild(informationDiv)
+        document.body.appendChild(parent)
+        mapInformation(content)
+    }
+
+    const produceEntireContent = () => {
+        for (let key in data) {
+            const content = data[key]
+            produceSingleContentFromScratch(content)
+        }
+    }
+
+
+    const updateSingleItem = (data, newInformation) => {
+        const { id } = newInformation
+        if (id in data){
+            for (let newKey in newInformation){
+                if (newKey==='meta') {
+                    if (data[id].hasOwnProperty('meta')) {
+                        for (let metaKey in newInformation.meta) {
+                            data[id].meta[metaKey] = newInformation.meta[metaKey]
+                        }
+                    }else {
+                        data[id].meta = newInformation.meta
+                    }
+                }else{
+                    data[id][newKey] = newInformation[newKey]
+                }
+            }
+            const meta = data[id].meta
+            const innerInformation = document.querySelector('#inner'+id)
+            innerInformation.innerHTML = ''
+            for (let field in meta) {
+                let fieldP = document.createElement('p')
+                value = meta[field]
+                if (field=="algorithm") {
+                    value = determineFullNameOfAlgorithm(value)
+                }
+                fieldP.innerHTML = `<span>${field}</span>: ${value}`
+                innerInformation.appendChild(fieldP)
+            }
+            mapInformation(data[id])
+        }else {
+            data[id] = newInformation
+            triggerReset()
+        }
+    }
+
+    let numberOfItems = Math.min(Object.keys(data).length, 3)
+    if (Object.keys(data).length===1) {
+        numberOfItems = 2
+    }
+    let defaultHeight = window.innerHeight / (numberOfItems)
+    let defaultWidth = window.innerHeight / (numberOfItems)
+
+    const triggerReset = () => {
+
+        let toRemove = document.querySelectorAll('.removable')
+
+        for (let k = 0; k < toRemove.length; k++) {
+            let current = toRemove[k]
+            current.parentNode.removeChild(current)
+        }
+
+        numberOfItems = Math.min(Object.keys(data).length, 3)
+        if (Object.keys(data).length===1) {
+            numberOfItems = 2
+        }
+        defaultHeight = window.innerHeight /(numberOfItems)
+        defaultWidth = window.innerHeight /(numberOfItems)
+        // document.body.innerHTML = ''
+        produceEntireContent()
+    }
+
+    window.addEventListener('resize', ()=>{
+        triggerReset()
+    })
+
+    produceEntireContent()
+
+    socket.on('algorithm_response', (incoming) => {
+        if (incoming.hasOwnProperty('nonprocessing')) return
+        updateSingleItem(data, incoming)
+    });
+
+    </script>
+</body>
+</html>
