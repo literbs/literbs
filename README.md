@@ -2,7 +2,8 @@
 
 # Lightweight and Rapid Bidirectional Search (LiteRBS)
 ![alt text](./portion.gif)
-![alt text](./LiteRBS_Turtlebot3.gif)
+<video width="630" height="300" src="https://user-images.githubusercontent.com/.../video.mp4" controls></video>
+![alt text](./LiteRBS_Turtlebot3.mp4)
 ## Introduction
 This project makes use of python version *3.12.6*.
 The project includes a requirements.txt for all the dependencies and their versions.
