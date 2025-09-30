@@ -2,7 +2,11 @@
 
 # Lightweight and Rapid Bidirectional Search (LiteRBS)
 ![alt text](./portion.gif)
-<video width="630" height="300" src="[https://github.com/literbs/literbs/blob/42456fb875f6955a2baf997167d896666e1a60e3/LiteRBS_Turtlebot3.mp4]" controls></video>
+<video width="630" height="300" src="https://user-images.githubusercontent.com/1e0ea49/LiteRBS_Turtlebot3.mp4" controls></video>
+
+
+
+ 
 
 ## Introduction
 This project makes use of python version *3.12.6*.
