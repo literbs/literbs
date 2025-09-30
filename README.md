@@ -2,8 +2,7 @@
 
 # Lightweight and Rapid Bidirectional Search (LiteRBS)
 ![alt text](./portion.gif)
-<video width="630" height="300" src="https://user-images.githubusercontent.com/1e0ea49/LiteRBS_Turtlebot3.mp4" controls></video>
-
+![alt text](./LiteRBS_Turtlebot3.gif)
 
 
  
