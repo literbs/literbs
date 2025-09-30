@@ -1,8 +1,13 @@
 
 
 # Lightweight and Rapid Bidirectional Search (LiteRBS)
-![alt text](./portion.gif)
-![alt text](./LiteRBS_Turtlebot3.gif)
+<p align="center">
+<img src="portion.gif" alt="animated" width="30%" height="30%" />
+</p>
+
+<p align="center">
+<img src="LiteRBS_Turtlebot3.gif" alt="animated" />
+</p>
 
 
  
